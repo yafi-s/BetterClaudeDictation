@@ -103,6 +103,12 @@ let helperConfig = {
 }
 let showIdleBar = true
 let liveText = false
+// The helper starts once a session that can dictate shows up: an interactive
+// one, or one a surface attaches to (the desktop app's sessions report
+// isInteractive false), or one typed in. Not from a render hook: drawing is
+// pure and may not write state. A headless run (claude -p) never starts one.
+let sessionStarted = false
+let helperStarted = false
 let ownsKey = true // mirrors the helper's last `owner` event
 let isCheckingKey = false // a new key was saved; the next ready stream confirms it
 
@@ -318,6 +324,12 @@ async function handle($: Engine, ev: HelperEvent) {
   }
 }
 
+function ensureHelper($: Engine) {
+  if (helperStarted || !sessionStarted) return
+  helperStarted = true
+  void runHelper($)
+}
+
 async function runHelper($: Engine) {
   const helper = `${$.plugin.root}/helper/dictation-helper.mjs`
   for (let attempt = 0; attempt < 5; attempt++) {
@@ -443,6 +455,8 @@ export const register: Register = (on, options) => {
     delay: String(options.latency ?? 'low'),
   }
   showIdleBar = options.showIdleBar !== false
+  sessionStarted = false
+  helperStarted = false
   liveText = options.liveText === true
   control = null
   region = null
@@ -454,26 +468,35 @@ export const register: Register = (on, options) => {
 
   on('session.start', async ($, e, next) => {
     const started = await next(e)
-    // A headless run (claude -p, a script) has no prompt box to dictate into.
-    if (!e.isInteractive) return started
+    sessionStarted = true
     await update($, view, () => IDLE)
     await $.command.register({
       name: 'dictate',
       description: 'Live dictation: start or finish. Also: key, setup, stop, cancel, status, devices, reconnect',
     })
-    void runHelper($)
+    if (e.isInteractive || e.surface) ensureHelper($)
     return started
   })
 
   // Enter while the last words are still being finalized: wait for them (a
   // second or so at most) so what is sent is what was said.
+  // The desktop app's sessions report isInteractive false at session.start;
+  // the app attaching (it first asks to draw) is what says one can dictate.
+  on('session.attach', async ($, e, next) => {
+    const attached = await next(e)
+    ensureHelper($)
+    return attached
+  })
+
   // The session you type in takes the push-to-talk key from the others.
   on('prompt.change', async ($, e, next) => {
+    ensureHelper($)
     claimKey($)
     return next(e)
   })
 
   on('prompt.submit', async ($, e, next) => {
+    ensureHelper($)
     claimKey($)
     const r = region
     if (!r || r.isDetached || e.text !== r.lastWritten) {
@@ -491,6 +514,7 @@ export const register: Register = (on, options) => {
   }).catch(($, e, next) => next(e)) // never hold a prompt back
 
   on('command.run', { command: 'dictate' }, async ($, e) => {
+    ensureHelper($)
     const v = await read($, view)
     return { text: await runCommand($, v, e.args.trim().toLowerCase()) }
   })

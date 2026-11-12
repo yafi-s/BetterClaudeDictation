@@ -34,6 +34,32 @@ function seeded(view: DictationView) {
   return () => ({ value: { value: { shape: 'view-2', value: view }, version: 1 } })
 }
 
+test('a headless session starts no helper; a surface attaching starts one', async ($, on) => {
+  const spawned: string[][] = []
+  // Tests run no processes: record the attempt and refuse it.
+  on('process.spawn', async function* (_, e) {
+    spawned.push([...e.argv])
+    return { deny: 'no processes in tests' }
+  })
+  on('command.register', () => ({ value: { command: 'dictate' } }))
+  on('ui.log', () => ({ value: undefined }))
+  on('session.start', (_, e) => ({ cwd: e.cwd }))
+  on('session.attach', (_, e) => ({ clientId: e.clientId }))
+
+  // The desktop app's sessions start like this too: not interactive, no surface yet.
+  await $.session.start({ cwd: '/', surface: null, isInteractive: false })
+  expect(spawned.length).toBe(0)
+
+  await $.session.attach({ surface: 'desktop', clientId: 'desktop-1' })
+  // The helper starts in the background; give it a few turns to get there.
+  for (let i = 0; i < 30 && spawned.length === 0; i++) await $.session.attach({ surface: 'desktop', clientId: 'desktop-1' })
+  expect(spawned.length).toBe(1)
+  expect(spawned[0]?.[0]).toBe('node')
+
+  await $.session.attach({ surface: 'desktop', clientId: 'desktop-2' })
+  expect(spawned.length).toBe(1) // one helper per session
+})
+
 test('while dictating, the band mirrors the native toolbar: Listening…, waveform, timer, Done and Cancel', async ($, on) => {
   on('state.get', seeded({ ...BASE, phase: 'listening', mode: 'hold', elapsedMs: 7300, levels: [0.1, 0.5, 1] }))
 
