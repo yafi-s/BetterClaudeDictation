@@ -1,4 +1,4 @@
-# BetterClaudeDiction
+# BetterClaudeDictation
 
 Fast, accurate push-to-talk dictation for Claude Code on Windows. Hold **Right Ctrl**, talk, let go. Your words land in Claude's prompt about half a second later, even after a long ramble.
 
@@ -8,7 +8,7 @@ It's a Claude Code mod (plugin name `push-to-talk-dictation`): a small bar above
 
 From [`bench/RESULTS.md`](bench/RESULTS.md), on synthetic speech (Windows' built-in voice), compared with recording first and uploading the clip on release, the way most dictation tools work:
 
-| | BetterClaudeDiction | Record, then upload |
+| | BetterClaudeDictation | Record, then upload |
 | --- | --- | --- |
 | Mic open after the key press | **33 ms** median (117 ms the first time) | ~800 ms recording with ffmpeg |
 | 53-second dictation: release → full text | **0.42 s** median of 3 runs | 1.30 s |
@@ -37,16 +37,16 @@ You need:
 **1. Install the mod.** At a Claude Code terminal prompt:
 
 ```
-/plugin install push-to-talk-dictation --marketplace yafi-s/BetterClaudeDiction
+/plugin install push-to-talk-dictation --marketplace yafi-s/BetterClaudeDictation
 ```
 
 Answer `y` to add the marketplace, then press Enter to install for your user. From a shell, the same thing is:
 
 ```bash
-claude plugin install push-to-talk-dictation --marketplace yafi-s/BetterClaudeDiction
+claude plugin install push-to-talk-dictation --marketplace yafi-s/BetterClaudeDictation
 ```
 
-In the desktop app, where `/plugin` doesn't run: click **+** next to the prompt box, then **Plugins**, **Add marketplace** with `yafi-s/BetterClaudeDiction`, then **Add plugin**.
+In the desktop app, where `/plugin` doesn't run: click **+** next to the prompt box, then **Plugins**, **Add marketplace** with `yafi-s/BetterClaudeDictation`, then **Add plugin**.
 
 **2. Add your OpenAI key.** Click **Set up dictation** in the bar above the prompt, or run `/dictate key`. Notepad opens the key file; paste your key, save, and close. The mod reconnects by itself, and a toast says when OpenAI accepts the key. If `OPENAI_API_KEY` (or another `OPENAI…KEY` variable) is already set, there's nothing to do.
 
@@ -56,7 +56,7 @@ In the desktop app, where `/plugin` doesn't run: click **+** next to the prompt 
 
 Paste this into Claude Code:
 
-> Install the Claude Code plugin `push-to-talk-dictation` from the GitHub marketplace `yafi-s/BetterClaudeDiction` by running `claude plugin install push-to-talk-dictation --marketplace yafi-s/BetterClaudeDiction`, check that Node.js 22+ is on my PATH, then tell me how to add my OpenAI API key. Don't ask me for the key itself.
+> Install the Claude Code plugin `push-to-talk-dictation` from the GitHub marketplace `yafi-s/BetterClaudeDictation` by running `claude plugin install push-to-talk-dictation --marketplace yafi-s/BetterClaudeDictation`, check that Node.js 22+ is on my PATH, then tell me how to add my OpenAI API key. Don't ask me for the key itself.
 
 Put the key in yourself, through **Set up dictation**. It never needs to pass through the chat.
 

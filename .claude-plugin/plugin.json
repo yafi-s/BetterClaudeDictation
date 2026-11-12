@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Fast, accurate push-to-talk dictation for Claude Code on Windows: hold Right Ctrl, talk, release. Streams to OpenAI gpt-live-transcribe; text lands about half a second after you stop.",
   "author": { "name": "Safwan Ali", "url": "https://github.com/yafi-s" },
-  "homepage": "https://github.com/yafi-s/BetterClaudeDiction",
+  "homepage": "https://github.com/yafi-s/BetterClaudeDictation",
   "license": "MIT",
   "types": "./types/index.d.ts",
   "userConfig": {

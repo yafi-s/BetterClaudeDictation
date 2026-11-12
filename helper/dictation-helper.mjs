@@ -1,4 +1,4 @@
-// BetterClaudeDiction helper: the streaming half of the mod.
+// BetterClaudeDictation helper: the streaming half of the mod.
 //
 // The mod starts this once per session. It drives VoiceKit (native mic +
 // global push-to-talk key), streams PCM16 to OpenAI's realtime transcription

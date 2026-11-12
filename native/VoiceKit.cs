@@ -1,4 +1,4 @@
-// VoiceKit: the native half of BetterClaudeDiction.
+// VoiceKit: the native half of BetterClaudeDictation.
 //
 // - Opens the microphone through WinMM (waveIn) as 24 kHz, 16-bit, mono PCM,
 //   the format OpenAI's realtime transcription takes, in tens of milliseconds
