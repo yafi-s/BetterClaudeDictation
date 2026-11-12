@@ -1,0 +1,10 @@
+Refactor the login handler so it returns an error when the token is expired.
+Run npm install, then run the pytest suite with the verbose flag.
+Open the README and add a section about Docker Compose.
+Rename the Kubernetes deployment from web to API gateway.
+Write a TypeScript function that parses the JSON config and validates every field.
+Check why the GitHub Actions workflow fails on the lint step.
+Move the database migration into its own commit and push the branch.
+Add a React hook that debounces the search input.
+Explain what this Python decorator does and whether it leaks memory.
+Ask Claude Code to summarize the diff before I open the pull request.

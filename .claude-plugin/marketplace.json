@@ -1,0 +1,15 @@
+{
+  "name": "push-to-talk-dictation",
+  "owner": {
+    "name": "Safwan Ali",
+    "url": "https://github.com/yafi-s"
+  },
+  "plugins": [
+    {
+      "name": "push-to-talk-dictation",
+      "source": "./",
+      "description": "Fast push-to-talk dictation for Claude Code on Windows: hold Right Ctrl, talk, release."
+    }
+  ],
+  "description": "Fast push-to-talk dictation for Claude Code on Windows (BetterClaudeDiction)."
+}

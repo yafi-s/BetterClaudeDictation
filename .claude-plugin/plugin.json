@@ -1,0 +1,55 @@
+{
+  "name": "push-to-talk-dictation",
+  "version": "1.0.0",
+  "description": "Fast, accurate push-to-talk dictation for Claude Code on Windows: hold Right Ctrl, talk, release. Streams to OpenAI gpt-live-transcribe; text lands about half a second after you stop.",
+  "author": { "name": "Safwan Ali", "url": "https://github.com/yafi-s" },
+  "homepage": "https://github.com/yafi-s/BetterClaudeDiction",
+  "license": "MIT",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "hotkey": {
+      "type": "string",
+      "title": "Push-to-talk key",
+      "description": "Hold to dictate, release to insert; tap to go hands-free. Works while Claude is not focused.",
+      "default": "right-ctrl",
+      "options": ["right-ctrl", "right-alt", "f8", "f9", "scroll-lock", "pause", "off"]
+    },
+    "microphone": {
+      "type": "string",
+      "title": "Microphone",
+      "description": "Part of the input device's name (for example 'USB' or 'Headset'); empty uses the Windows default.",
+      "default": ""
+    },
+    "languages": {
+      "type": "string",
+      "title": "Languages",
+      "description": "Comma-separated ISO codes you dictate in, for example 'en' or 'en, fr'.",
+      "default": "en"
+    },
+    "vocabulary": {
+      "type": "string",
+      "title": "Vocabulary hints",
+      "description": "Comma-separated words and names the transcriber should expect.",
+      "default": "Claude, Claude Code, Anthropic, OpenAI, TypeScript, JavaScript, Python, Node.js, npm, pytest, git, GitHub, README, Docker, Kubernetes, React, JSON, YAML, API, CLI"
+    },
+    "latency": {
+      "type": "string",
+      "title": "Transcription latency",
+      "description": "Lower shows words sooner; higher waits for more context.",
+      "default": "low",
+      "options": ["minimal", "low", "medium", "high"]
+    },
+    "liveText": {
+      "type": "boolean",
+      "title": "Show words while you speak",
+      "description": "Off: the text lands once you finish, like Claude's own mic. On: words stream into the prompt as you talk, dimmed until final.",
+      "default": false
+    },
+    "showIdleBar": {
+      "type": "boolean",
+      "title": "Show the dictation bar when idle",
+      "description": "A one-line hint and Dictate button above the prompt while not dictating.",
+      "default": true
+    }
+  }
+}

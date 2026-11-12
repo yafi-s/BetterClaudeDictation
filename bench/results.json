@@ -1,0 +1,386 @@
+{
+  "date": "2026-11-12T04:38:32.955Z",
+  "node": "v24.15.0",
+  "uploadModel": "gpt-transcribe",
+  "delay": "low",
+  "summary": {
+    "mod": {
+      "firstWordMs": 967.2464999999938,
+      "finalMedianMs": 573.7167000000045,
+      "finalP90Ms": 679.5994999999966,
+      "wer": 0,
+      "errors": 0,
+      "words": 114,
+      "connectMs": 245.05969999999797,
+      "termsExact": 11,
+      "termsFound": 12
+    },
+    "no-hints": {
+      "firstWordMs": 914.8370999999897,
+      "finalMedianMs": 459.969299999997,
+      "finalP90Ms": 673.5835000000079,
+      "wer": 0,
+      "errors": 0,
+      "words": 114,
+      "connectMs": 272.380799999999,
+      "termsExact": 10,
+      "termsFound": 12
+    },
+    "upload": {
+      "firstWordMs": null,
+      "finalMedianMs": 459.27349999999933,
+      "finalP90Ms": 675.4739000000009,
+      "wer": 0,
+      "errors": 0,
+      "words": 114,
+      "connectMs": null,
+      "termsExact": 11,
+      "termsFound": 12
+    }
+  },
+  "long": {
+    "audioMs": 53260,
+    "words": 114,
+    "mod": {
+      "finalMs": 417.83950000000186,
+      "errors": 0,
+      "text": "Refactor the login handler so it returns an error when the token is expired. Run npm install, then run the pytest suite with the verbose flag. Open the README and add a section about Docker Compose. Rename the Kubernetes deployment from web to api-gateway. Write a TypeScript function that parses the JSON config and validates every field Check why the GitHub Actions workflow fails on the lint step Move the database migration into its own commit and push the branch. Add a React hook that debounces the search input. Explain what this Python decorator does and whether it leaks memory Ask Claude Code to summarize the diff before I open the pull request."
+    },
+    "upload": {
+      "finalMs": 1416.2012000000032,
+      "errors": 0,
+      "text": "Refactor the login handler so it returns an error when the token is expired. Run npm install, then run the pytest suite with the verbose flag. Open the README and add a section about Docker Compose. Rename the Kubernetes deployment from web to api-gateway. Write a TypeScript function that parses the JSON config and validates every field. Check why the GitHub Actions workflow fails on the lint step. Move the database migration into its own commit and push the branch. Add a React hook that debounces the search input. Explain what this Python decorator does and whether it leaks memory. Ask Claude Code to summarize the diff before I open the pull request."
+    }
+  },
+  "longRuns": [
+    {
+      "audioMs": 53260,
+      "words": 114,
+      "mod": {
+        "finalMs": 404.7133000000031,
+        "errors": 0,
+        "text": "Refactor the login handler so it returns an error when the token is expired. Run npm install, then run the pytest suite with the verbose flag. Open the README and add a section about Docker Compose. Rename the Kubernetes deployment from web to api-gateway. Write a TypeScript function that parses the JSON config and validates every field. Check why the GitHub Actions workflow fails on the lint step. Move the database migration into its own commit and push the branch. Add a React hook that debounces the search input. Explain what this Python decorator does and whether it leaks memory. Ask Claude Code to summarize the diff before I open the pull request."
+      },
+      "upload": {
+        "finalMs": 1304.3736999999965,
+        "errors": 0,
+        "text": "Refactor the login handler so it returns an error when the token is expired. Run npm install, then run the pytest suite with the verbose flag. Open the README and add a section about Docker Compose. Rename the Kubernetes deployment from web to api-gateway. Write a TypeScript function that parses the JSON config and validates every field. Check why the GitHub Actions workflow fails on the lint step. Move the database migration into its own commit and push the branch. Add a React hook that debounces the search input. Explain what this Python decorator does and whether it leaks memory. Ask Claude Code to summarize the diff before I open the pull request."
+      }
+    },
+    {
+      "audioMs": 53260,
+      "words": 114,
+      "mod": {
+        "finalMs": 646.3157999999967,
+        "errors": 0,
+        "text": "Refactor the login handler so it returns an error when the token is expired. Run npm install, then run the pytest suite with the verbose flag Open the README and add a section about Docker Compose. Rename the Kubernetes deployment from web to api-gateway. Write a TypeScript function that parses the JSON config and validates every field Check why the GitHub Actions workflow fails on the lint step. Move the database migration into its own commit and push the branch. Add a React hook that debounces the search input. Explain what this Python decorator does and whether it leaks memory. Ask Claude Code to summarize the diff before I open the pull request."
+      },
+      "upload": {
+        "finalMs": 1274.658500000005,
+        "errors": 0,
+        "text": "Refactor the login handler so it returns an error when the token is expired. Run npm install, then run the pytest suite with the verbose flag. Open the README and add a section about Docker Compose. Rename the Kubernetes deployment from web to api-gateway. Write a TypeScript function that parses the JSON config and validates every field. Check why the GitHub Actions workflow fails on the lint step. Move the database migration into its own commit and push the branch. Add a React hook that debounces the search input. Explain what this Python decorator does and whether it leaks memory. Ask Claude Code to summarize the diff before I open the pull request."
+      }
+    },
+    {
+      "audioMs": 53260,
+      "words": 114,
+      "mod": {
+        "finalMs": 417.83950000000186,
+        "errors": 0,
+        "text": "Refactor the login handler so it returns an error when the token is expired. Run npm install, then run the pytest suite with the verbose flag. Open the README and add a section about Docker Compose. Rename the Kubernetes deployment from web to api-gateway. Write a TypeScript function that parses the JSON config and validates every field Check why the GitHub Actions workflow fails on the lint step Move the database migration into its own commit and push the branch. Add a React hook that debounces the search input. Explain what this Python decorator does and whether it leaks memory Ask Claude Code to summarize the diff before I open the pull request."
+      },
+      "upload": {
+        "finalMs": 1416.2012000000032,
+        "errors": 0,
+        "text": "Refactor the login handler so it returns an error when the token is expired. Run npm install, then run the pytest suite with the verbose flag. Open the README and add a section about Docker Compose. Rename the Kubernetes deployment from web to api-gateway. Write a TypeScript function that parses the JSON config and validates every field. Check why the GitHub Actions workflow fails on the lint step. Move the database migration into its own commit and push the branch. Add a React hook that debounces the search input. Explain what this Python decorator does and whether it leaks memory. Ask Claude Code to summarize the diff before I open the pull request."
+      }
+    }
+  ],
+  "mic": {
+    "date": "2026-11-12T04:30:03.283Z",
+    "results": [
+      {
+        "label": "This mod: native WinMM capture (first run is a cold open)",
+        "medianMs": 32.604699999999866,
+        "runs": [
+          117.30520000000001,
+          34.64470000000006,
+          25.445500000000038,
+          32.604699999999866,
+          27.44950000000017
+        ]
+      },
+      {
+        "label": "ffmpeg DirectShow capture, 20 ms buffer",
+        "medianMs": 796.5237000000006,
+        "runs": [
+          796.5237000000006,
+          797.5096000000003,
+          700.156
+        ]
+      }
+    ]
+  },
+  "rows": [
+    {
+      "sentence": "Refactor the login handler so it returns an error when the token is expired.",
+      "audioMs": 5120,
+      "mod": {
+        "connectMs": 303.7979,
+        "firstWordMs": 954.0583999999999,
+        "finalMs": 493.53259999999955,
+        "text": "Refactor the login handler so it returns an error when the token is expired",
+        "errors": 0,
+        "words": 14
+      },
+      "no-hints": {
+        "connectMs": 321.41290000000026,
+        "firstWordMs": 911.7168999999994,
+        "finalMs": 473.0748999999996,
+        "text": "Refactor the login handler so it returns an error when the token is expired.",
+        "errors": 0,
+        "words": 14
+      },
+      "upload": {
+        "finalMs": 675.4739000000009,
+        "text": "Refactor the login handler so it returns an error when the token is expired.",
+        "errors": 0,
+        "words": 14
+      }
+    },
+    {
+      "sentence": "Run npm install, then run the pytest suite with the verbose flag.",
+      "audioMs": 5230,
+      "mod": {
+        "connectMs": 323.4216000000015,
+        "firstWordMs": 970.9343000000008,
+        "finalMs": 811.3587000000007,
+        "text": "Run npm install, then run the pytest suite with the verbose flag.",
+        "errors": 0,
+        "words": 12
+      },
+      "no-hints": {
+        "connectMs": 220.26959999999963,
+        "firstWordMs": 1017.0138999999981,
+        "finalMs": 651.0761999999995,
+        "text": "Run npm install, then run the pytest suite with the verbose flag.",
+        "errors": 0,
+        "words": 12
+      },
+      "upload": {
+        "finalMs": 459.27349999999933,
+        "text": "Run npm install, then run the pytest suite with the verbose flag.",
+        "errors": 0,
+        "words": 12
+      }
+    },
+    {
+      "sentence": "Open the README and add a section about Docker Compose.",
+      "audioMs": 3880,
+      "mod": {
+        "connectMs": 265.28159999999843,
+        "firstWordMs": 678.8847999999998,
+        "finalMs": 404.96399999999994,
+        "text": "Open the README and add a section about Docker Compose.",
+        "errors": 0,
+        "words": 10
+      },
+      "no-hints": {
+        "connectMs": 311.78359999999884,
+        "firstWordMs": 1437.1051000000007,
+        "finalMs": 944.4049999999988,
+        "text": "Open the readme and add a section about Docker Compose.",
+        "errors": 0,
+        "words": 10
+      },
+      "upload": {
+        "finalMs": 378.8807000000015,
+        "text": "Open the README and add a section about Docker Compose.",
+        "errors": 0,
+        "words": 10
+      }
+    },
+    {
+      "sentence": "Rename the Kubernetes deployment from web to API gateway.",
+      "audioMs": 4215,
+      "mod": {
+        "connectMs": 295.16309999999794,
+        "firstWordMs": 970.5521000000008,
+        "finalMs": 576.523199999996,
+        "text": "Rename the Kubernetes deployment from web to api-gateway.",
+        "errors": 0,
+        "words": 9
+      },
+      "no-hints": {
+        "connectMs": 346.4789000000019,
+        "firstWordMs": 889.4242999999988,
+        "finalMs": 409.9777999999933,
+        "text": "Rename the Kubernetes deployment from web to api-gateway.",
+        "errors": 0,
+        "words": 9
+      },
+      "upload": {
+        "finalMs": 512.6267000000007,
+        "text": "Rename the Kubernetes deployment from web to API gateway.",
+        "errors": 0,
+        "words": 9
+      }
+    },
+    {
+      "sentence": "Write a TypeScript function that parses the JSON config and validates every field.",
+      "audioMs": 5770,
+      "mod": {
+        "connectMs": 242.5717999999979,
+        "firstWordMs": 989.1252999999997,
+        "finalMs": 547.5395999999964,
+        "text": "Write a TypeScript function that parses the JSON config and validates every field.",
+        "errors": 0,
+        "words": 13
+      },
+      "no-hints": {
+        "connectMs": 383.1797000000006,
+        "firstWordMs": 923.3355999999985,
+        "finalMs": 459.969299999997,
+        "text": "Write a TypeScript function that parses the JSON config and validates every field.",
+        "errors": 0,
+        "words": 13
+      },
+      "upload": {
+        "finalMs": 404.01400000000285,
+        "text": "Write a TypeScript function that parses the JSON config and validates every field.",
+        "errors": 0,
+        "words": 13
+      }
+    },
+    {
+      "sentence": "Check why the GitHub Actions workflow fails on the lint step.",
+      "audioMs": 4060,
+      "mod": {
+        "connectMs": 348.1489999999976,
+        "firstWordMs": 993.8122000000003,
+        "finalMs": 627.7581999999966,
+        "text": "Check why the GitHub Actions workflow fails on the lint step.",
+        "errors": 0,
+        "words": 11
+      },
+      "no-hints": {
+        "connectMs": 272.380799999999,
+        "firstWordMs": 906.5787999999957,
+        "finalMs": 391.98429999999644,
+        "text": "Check why the GitHub Actions workflow fails on the lint step.",
+        "errors": 0,
+        "words": 11
+      },
+      "upload": {
+        "finalMs": 904.4336000000039,
+        "text": "Check why the GitHub Actions workflow fails on the lint step.",
+        "errors": 0,
+        "words": 11
+      }
+    },
+    {
+      "sentence": "Move the database migration into its own commit and push the branch.",
+      "audioMs": 4455,
+      "mod": {
+        "connectMs": 209.35489999999118,
+        "firstWordMs": 967.2464999999938,
+        "finalMs": 572.6073999999935,
+        "text": "Move the database migration into its own commit and push the branch.",
+        "errors": 0,
+        "words": 12
+      },
+      "no-hints": {
+        "connectMs": 268.44250000000466,
+        "firstWordMs": 906.3846999999951,
+        "finalMs": 402.6316999999981,
+        "text": "Move the database migration into its own commit and push the branch.",
+        "errors": 0,
+        "words": 12
+      },
+      "upload": {
+        "finalMs": 383.5194999999949,
+        "text": "Move the database migration into its own commit and push the branch.",
+        "errors": 0,
+        "words": 12
+      }
+    },
+    {
+      "sentence": "Add a React hook that debounces the search input.",
+      "audioMs": 3440,
+      "mod": {
+        "connectMs": 245.05969999999797,
+        "firstWordMs": 1003.8856999999989,
+        "finalMs": 592.4325000000099,
+        "text": "Add a React hook that debounces the search input.",
+        "errors": 0,
+        "words": 9
+      },
+      "no-hints": {
+        "connectMs": 339.18700000000536,
+        "firstWordMs": 1002.5780000000086,
+        "finalMs": 673.5835000000079,
+        "text": "Add a React hook that debounces the search input.",
+        "errors": 0,
+        "words": 9
+      },
+      "upload": {
+        "finalMs": 388.7069000000047,
+        "text": "Add a React hook that debounces the search input.",
+        "errors": 0,
+        "words": 9
+      }
+    },
+    {
+      "sentence": "Explain what this Python decorator does and whether it leaks memory.",
+      "audioMs": 4425,
+      "mod": {
+        "connectMs": 227.20610000001034,
+        "firstWordMs": 944.4889000000112,
+        "finalMs": 573.7167000000045,
+        "text": "Explain what this Python decorator does and whether it leaks memory.",
+        "errors": 0,
+        "words": 11
+      },
+      "no-hints": {
+        "connectMs": 260.9277000000002,
+        "firstWordMs": 914.8370999999897,
+        "finalMs": 424.06200000000536,
+        "text": "Explain what this Python decorator does and whether it leaks memory.",
+        "errors": 0,
+        "words": 11
+      },
+      "upload": {
+        "finalMs": 591.2894000000088,
+        "text": "Explain what this Python decorator does and whether it leaks memory.",
+        "errors": 0,
+        "words": 11
+      }
+    },
+    {
+      "sentence": "Ask Claude Code to summarize the diff before I open the pull request.",
+      "audioMs": 4570,
+      "mod": {
+        "connectMs": 235.97419999999693,
+        "firstWordMs": 900.5400000000081,
+        "finalMs": 679.5994999999966,
+        "text": "Ask Claude Code to summarize the diff before I open the pull request.",
+        "errors": 0,
+        "words": 13
+      },
+      "no-hints": {
+        "connectMs": 268.09440000000177,
+        "firstWordMs": 993.5589999999938,
+        "finalMs": 673.5570000000007,
+        "text": "Ask Claude Code to summarize the diff before I open the pull request.",
+        "errors": 0,
+        "words": 13
+      },
+      "upload": {
+        "finalMs": 618.6270000000077,
+        "text": "Ask Claude code to summarize the diff before I open the pull request.",
+        "errors": 0,
+        "words": 13
+      }
+    }
+  ]
+}
