@@ -2,7 +2,10 @@
   "name": "push-to-talk-dictation",
   "version": "1.0.0",
   "description": "Fast, accurate push-to-talk dictation for Claude Code on Windows: hold Right Ctrl, talk, release. Streams to OpenAI gpt-live-transcribe; text lands about half a second after you stop.",
-  "author": { "name": "Safwan Ali", "url": "https://github.com/yafi-s" },
+  "author": {
+    "name": "Safwan Ali",
+    "url": "https://github.com/yafi-s"
+  },
   "homepage": "https://github.com/yafi-s/BetterClaudeDictation",
   "license": "MIT",
   "types": "./types/index.d.ts",
@@ -12,7 +15,15 @@
       "title": "Push-to-talk key",
       "description": "Hold to dictate, release to insert; tap to go hands-free. Works while Claude is not focused.",
       "default": "right-ctrl",
-      "options": ["right-ctrl", "right-alt", "f8", "f9", "scroll-lock", "pause", "off"]
+      "options": [
+        "right-ctrl",
+        "right-alt",
+        "f8",
+        "f9",
+        "scroll-lock",
+        "pause",
+        "off"
+      ]
     },
     "microphone": {
       "type": "string",
@@ -37,7 +48,18 @@
       "title": "Transcription latency",
       "description": "Lower shows words sooner; higher waits for more context.",
       "default": "low",
-      "options": ["minimal", "low", "medium", "high"]
+      "options": [
+        "minimal",
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "autoStopSeconds": {
+      "type": "number",
+      "title": "Hands-free auto-stop (seconds)",
+      "description": "Hands-free dictation stops after this many seconds without speech, so the mic is never left open. 0 turns it off.",
+      "default": 20
     },
     "liveText": {
       "type": "boolean",

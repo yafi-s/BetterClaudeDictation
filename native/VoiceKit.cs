@@ -376,7 +376,7 @@ static class VoiceKit
                     if (Down(k))
                     {
                         chorded = true;
-                        Emit("{\"type\":\"key\",\"state\":\"chord\"}");
+                        Emit("{\"type\":\"key\",\"state\":\"chord\",\"vk\":" + k + "}");
                         break;
                     }
                 }

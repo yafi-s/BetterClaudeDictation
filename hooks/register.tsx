@@ -100,6 +100,7 @@ let helperConfig = {
   keywords: [] as string[],
   prompt: PROMPT_CONTEXT,
   delay: 'low',
+  autoStopSeconds: 20,
 }
 let showIdleBar = true
 let liveText = false
@@ -109,6 +110,9 @@ let liveText = false
 // pure and may not write state. A headless run (claude -p) never starts one.
 let sessionStarted = false
 let helperStarted = false
+let pendingStart = false // Dictate pressed before the helper was ready
+let wantsKey = false // this session came on screen before its helper was ready
+let audioSentMs = 0 // audio sent to OpenAI by this session (what is billed)
 let ownsKey = true // mirrors the helper's last `owner` event
 let isCheckingKey = false // a new key was saved; the next ready stream confirms it
 
@@ -222,6 +226,11 @@ async function handle($: Engine, ev: HelperEvent) {
         notice: keyNotice,
         noticeKind: keyNotice ? 'error' : null,
       })
+      if (wantsKey) claimKey($, 'shown', true)
+      if (pendingStart) {
+        pendingStart = false
+        if (ev.hasKey) await send($, 'start')
+      }
       return
     }
     case 'owner':
@@ -296,11 +305,14 @@ async function handle($: Engine, ev: HelperEvent) {
       }
       if (toClipboard.delete(ev.id)) await settleToClipboard($, ev.text)
       else if (!s && ev.text) await settleToClipboard($, ev.text)
-      if (ev.isSilent) $.ui.toast('No speech detected. Check the microphone, or /dictate devices.')
+      audioSentMs += ev.sentMs ?? 0
+      if (ev.reason === 'silence') $.ui.toast(`Stopped listening after ${Math.round((ev.autoStopMs ?? 0) / 1000)} s without speech.`)
+      else if (ev.isSilent) $.ui.toast('No speech detected. Check the microphone, or /dictate devices.')
       await setView($, { phase: listeningId !== null ? 'listening' : finishing.size > 0 ? 'finishing' : 'idle' })
       return
     }
     case 'canceled': {
+      audioSentMs += ev.sentMs ?? 0
       finishing.delete(ev.id)
       toClipboard.delete(ev.id)
       if (listeningId === ev.id) listeningId = null
@@ -372,10 +384,15 @@ async function runHelper($: Engine) {
 
 // Takes the push-to-talk key for this session; one request, only when another
 // session held it.
-function claimKey($: Engine) {
-  if (ownsKey || !control) return
+function claimKey($: Engine, why = 'typed', force = false) {
+  if (!control) {
+    if (force) wantsKey = true
+    return
+  }
+  if (ownsKey && !force) return
   ownsKey = true
-  void send($, 'activate').catch(() => {
+  wantsKey = false
+  void send($, `activate&why=${why}`).catch(() => {
     ownsKey = false
   })
 }
@@ -437,7 +454,8 @@ async function runCommand($: Engine, v: DictationView, sub = ''): Promise<string
       const r = await send($, 'status')
       return [
         `State: ${r.state}; model: ${r.model}; warm stream: ${r.spare}; API key: ${r.hasKey ? `found (${r.keySource})` : 'missing'}.`,
-        `Push-to-talk: ${v.hotkey || 'none in this session'}; microphone: ${helperConfig.device || 'Windows default'}; languages: ${helperConfig.languages.join(', ') || 'auto'}; latency: ${helperConfig.delay}.`,
+        `Push-to-talk: ${v.hotkey || 'none'} (${v.isOwner ? 'answers here' : 'with another session'}); microphone: ${helperConfig.device || 'Windows default'}; languages: ${helperConfig.languages.join(', ') || 'auto'}; latency: ${helperConfig.delay}; hands-free stops after ${helperConfig.autoStopSeconds} s without speech.`,
+        `Audio sent to OpenAI by this session: ${(audioSentMs / 60000).toFixed(2)} min (about $${((audioSentMs / 60000) * 0.017).toFixed(3)}). Silence is not sent.`,
       ].join('\n')
     }
     default:
@@ -453,10 +471,14 @@ export const register: Register = (on, options) => {
     keywords: list(options.vocabulary),
     prompt: PROMPT_CONTEXT,
     delay: String(options.latency ?? 'low'),
+    autoStopSeconds: Number(options.autoStopSeconds ?? 20),
   }
   showIdleBar = options.showIdleBar !== false
   sessionStarted = false
   helperStarted = false
+  pendingStart = false
+  wantsKey = false
+  audioSentMs = 0
   liveText = options.liveText === true
   control = null
   region = null
@@ -519,6 +541,17 @@ export const register: Register = (on, options) => {
     return { text: await runCommand($, v, e.args.trim().toLowerCase()) }
   })
 
+  // The bar's presence module posts once each time the app draws this session:
+  // it is the one on screen, so the push-to-talk key comes here.
+  on('ui.message', async ($, e, next) => {
+    const data = e.data as { kind?: string } | null
+    if (data?.kind === 'shown') {
+      ensureHelper($)
+      claimKey($, 'shown', true)
+    }
+    return next(e)
+  })
+
   // ---- the band above the prompt --------------------------------------------
 
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
@@ -526,10 +559,14 @@ export const register: Register = (on, options) => {
     const v = await read($, view)
     const table = $.ui.resolve(e)
     const { Box, Button, Text } = table
-    // The desktop draws SVG: there the band uses Claude's own mic glyphs and a
+    // The desktop draws SVG: there the band uses the mod's mic icon and a
     // bar waveform; the terminal gets text stand-ins.
     const Svg = e.surface !== 'terminal' && 'Svg' in table ? table.Svg : null
     const key = v.hotkey
+    // Present in every phase under one key, so the instance (and its "shown")
+    // lives as long as the app shows this session's bar.
+    const Client = 'Client' in table && (e.surface === 'desktop' || e.surface === 'terminal') ? table.Client : null
+    const presence = Client ? <Client key="presence" module="./presence.ts" props={null} width={1} height={1} /> : null
 
     const mic = (isLive: boolean) =>
       Svg ? (
@@ -573,6 +610,7 @@ export const register: Register = (on, options) => {
             </Text>
             <Button key="done" label="Done" variant="primary" onPress={() => send($, 'stop')} />
             <Button key="cancel" label="Cancel" onPress={() => send($, 'cancel')} />
+            {presence}
           </Box>
           {liveText && !v.isBoxLive && tail ? <Text wrap="wrap">{tail}</Text> : null}
           <Text dimColor>{hint}</Text>
@@ -587,13 +625,14 @@ export const register: Register = (on, options) => {
           <Box gap={1} alignItems="center">
             {mic(false)}
             <Text dimColor>Finishing dictation…</Text>
+            {presence}
           </Box>
           {notice}
         </Box>
       )
     }
 
-    if (v.phase === 'starting' || (!showIdleBar && !v.notice)) return next(e)
+    if (!showIdleBar && !v.notice) return next(e)
 
     if (v.phase === 'unavailable') return notice ?? next(e)
 
@@ -603,9 +642,15 @@ export const register: Register = (on, options) => {
           {mic(false)}
           <Button
             key="dictate"
-            label={v.hasKey ? 'Dictate' : 'Set up dictation'}
+            label={v.hasKey || v.phase === 'starting' ? 'Dictate' : 'Set up dictation'}
             plain
             onPress={async () => {
+              if (!control) {
+                // Still starting: dictate as soon as the helper is ready.
+                pendingStart = true
+                ensureHelper($)
+                return
+              }
               if (!v.hasKey) {
                 await openKeyFile($)
                 return
@@ -613,8 +658,9 @@ export const register: Register = (on, options) => {
               await send($, 'start')
             }}
           />
-          {v.hasKey && key && v.isOwner ? <Text dimColor>or press and hold {key} to record</Text> : null}
-          {v.hasKey && key && !v.isOwner ? <Text dimColor>{key} is with another session; type here to bring it back</Text> : null}
+          {v.phase !== 'starting' && v.hasKey && key && v.isOwner ? <Text dimColor>or press and hold {key} to record</Text> : null}
+          {v.phase !== 'starting' && v.hasKey && key && !v.isOwner ? <Text dimColor>{key} is with another session; click into this one to bring it here</Text> : null}
+          {presence}
         </Box>
         {notice}
       </Box>

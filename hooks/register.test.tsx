@@ -134,10 +134,35 @@ test('when another session holds the key, the idle bar says how to bring it here
   on('state.get', seeded({ ...BASE, isOwner: false }))
 
   const ui = await $.ui.mount({ ...BAND, surface: 'desktop' })
-  expect((await ui.find({ type: 'Text', text: /another session/ }))?.text).toBe('Right Ctrl is with another session; type here to bring it back')
+  expect((await ui.find({ type: 'Text', text: /another session/ }))?.text).toBe('Right Ctrl is with another session; click into this one to bring it here')
   expect(await ui.find({ type: 'Text', text: /press and hold/ })).toBeUndefined()
   expect(await ui.find({ key: 'dictate' })).toBeDefined()
   await ui.unmount()
+})
+
+test('the bar shows at once while the helper starts, with Dictate ready to press', async ($, on) => {
+  on('state.get', seeded({ ...BASE, phase: 'starting', hasKey: false, hotkey: '' }))
+
+  for (const surface of ['terminal', 'desktop'] as const) {
+    const ui = await $.ui.mount({ ...BAND, surface })
+    const dictate = await ui.find({ key: 'dictate' })
+    expect(dictate).toBeDefined()
+    expect(JSON.stringify(dictate)).toContain('"label":"Dictate"')
+    expect(await ui.find({ type: 'Text', text: /press and hold/ })).toBeUndefined()
+    await ui.unmount()
+  }
+})
+
+test('every phase of the bar carries the presence module that reports this session on screen', async ($, on) => {
+  let current: DictationView = BASE
+  on('state.get', () => seeded(current)())
+  for (const phase of ['idle', 'listening', 'finishing'] as const) {
+    current = { ...BASE, phase, mode: phase === 'listening' ? 'hold' : null }
+    const ui = await $.ui.mount({ ...BAND, surface: 'desktop' })
+    const presence = await ui.find({ key: 'presence' })
+    expect(JSON.stringify(presence)).toContain('presence.ts')
+    await ui.unmount()
+  }
 })
 
 test('finishing reads as the native one does', async ($, on) => {

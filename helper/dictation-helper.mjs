@@ -11,7 +11,7 @@
 
 import { execFileSync, spawn } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
-import { existsSync, mkdirSync, readFileSync, unlinkSync, watch, writeFileSync } from 'node:fs'
+import { appendFileSync, existsSync, mkdirSync, readFileSync, statSync, unlinkSync, watch, writeFileSync } from 'node:fs'
 import http from 'node:http'
 import os from 'node:os'
 import path from 'node:path'
@@ -21,6 +21,10 @@ const HERE = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(HERE, '..')
 const SAMPLE_RATE = 24000
 const BYTES_PER_MS = (SAMPLE_RATE * 2) / 1000
+// Audio goes to OpenAI only around speech: this much from before it starts,
+// and until this long after it stops.
+const PREROLL_MS = 500
+const HANGOVER_MS = 1200
 const KEY_FILE = path.join(os.homedir(), '.claude', 'push-to-talk-dictation', 'openai-api-key')
 const OWNER_FILE = path.join(os.homedir(), '.claude', 'push-to-talk-dictation', 'owner.json')
 const SPARE_IDLE_MS = 10 * 60 * 1000
@@ -52,6 +56,7 @@ const config = (() => {
     delay: 'low',
     holdMs: 300,
     warmConnection: true,
+    autoStopSeconds: 20,
     maxMinutes: 5,
     wsUrl: process.env.LIVE_DICTATION_WS_URL || 'wss://api.openai.com/v1/realtime?intent=transcription',
     ...given,
@@ -122,6 +127,17 @@ function readKey() {
 // session takes it only when nobody holds it, and a press while the owner is
 // gone (its session closed) goes to whichever helper claims it first.
 
+// A short record of which session took the key and why, to check routing
+// against how the app really behaves. Kept under 256 KB.
+const ROUTE_LOG = path.join(path.dirname(OWNER_FILE), 'routing.log')
+function logRoute(message) {
+  try {
+    mkdirSync(path.dirname(ROUTE_LOG), { recursive: true })
+    if (existsSync(ROUTE_LOG) && statSync(ROUTE_LOG).size > 256 * 1024) writeFileSync(ROUTE_LOG, '')
+    appendFileSync(ROUTE_LOG, `${new Date().toISOString()} pid=${process.pid} ${message}\n`)
+  } catch {}
+}
+
 function readOwner() {
   try {
     return JSON.parse(readFileSync(OWNER_FILE, 'utf8'))
@@ -143,7 +159,8 @@ function isOwner() {
   return readOwner()?.pid === process.pid
 }
 
-function claimOwner() {
+function claimOwner(why = 'command') {
+  logRoute(`claim ${why}`)
   try {
     mkdirSync(path.dirname(OWNER_FILE), { recursive: true })
     writeFileSync(OWNER_FILE, JSON.stringify({ pid: process.pid, at: Date.now() }))
@@ -264,7 +281,32 @@ function startNative(vk) {
   })
 }
 
+// For tests and benchmarks: LIVE_DICTATION_FAKE_MIC names a 24 kHz mono
+// 16-bit WAV that plays as the microphone, in real time, then silence.
+const FAKE_MIC = process.env.LIVE_DICTATION_FAKE_MIC || ''
+
+function openFakeCapture(d) {
+  const wav = readFileSync(FAKE_MIC)
+  const at = wav.indexOf('data')
+  const pcm = wav.subarray(at + 8, at + 8 + wav.readUInt32LE(at + 4))
+  const frame = 20 * BYTES_PER_MS
+  const owner = { d, stopped: false, onStopped: null, isFake: true, timer: null }
+  let offset = 0
+  const startedAt = now()
+  // Windows timers tick every ~16 ms or slower: send every frame that is due.
+  owner.timer = setInterval(() => {
+    while ((offset / frame) * 20 <= now() - startedAt) {
+      const chunk = offset < pcm.length ? Buffer.from(pcm.subarray(offset, offset + frame)) : Buffer.alloc(frame)
+      offset += frame
+      onAudio(d, chunk)
+      if (owner.stopped || d.phase !== 'listening') break
+    }
+  }, 10)
+  return owner
+}
+
 function openCapture(d) {
+  if (FAKE_MIC && d) return openFakeCapture(d)
   const owner = { d, stopped: false, onStopped: null }
   captureQueue.push(owner)
   native?.stdin.write('start\n')
@@ -272,6 +314,11 @@ function openCapture(d) {
 }
 
 function closeCapture(owner) {
+  if (owner.isFake) {
+    clearInterval(owner.timer)
+    owner.stopped = true
+    return Promise.resolve()
+  }
   return new Promise(resolve => {
     if (owner.stopped) return resolve()
     const timer = setTimeout(resolve, 1000)
@@ -284,7 +331,7 @@ function closeCapture(owner) {
 }
 
 function onNative(ev) {
-  if (ev.type === 'key') return onKey(ev.state)
+  if (ev.type === 'key') return onKey(ev.state, ev.vk)
   if (ev.type === 'capture') {
     if (ev.state === 'started') {
       captureOwner = captureQueue.shift() ?? null
@@ -317,7 +364,7 @@ let keyDownAt = 0
 let lockedTapPending = false
 let pressIsElsewhere = false // this press belongs to another session's helper
 
-function onKey(state) {
+function onKey(state, vk) {
   const t = now()
   const d = current
   if (pressIsElsewhere) {
@@ -330,8 +377,10 @@ function onKey(state) {
       // Every open session sees the key; only the owner's helper answers it.
       if (!claimIfUnowned()) {
         pressIsElsewhere = true
+        logRoute(`press: not mine, owner pid=${readOwner()?.pid ?? 'none'}`)
         return
       }
+      logRoute('press: dictating here')
       start('hotkey', 'hold')
     } else if (d.mode === 'locked') lockedTapPending = true
   } else if (state === 'up') {
@@ -348,7 +397,10 @@ function onKey(state) {
     }
   } else if (state === 'chord') {
     if (lockedTapPending) lockedTapPending = false // a shortcut while locked: keep listening
-    else if (d && d.mode === 'hold' && t - keyDownAt < 600) cancel(d, 'shortcut', { quiet: true })
+    else if (d && d.mode === 'hold' && t - keyDownAt < 600) {
+      logRoute(`shortcut: key ${vk} pressed with the push-to-talk key`)
+      cancel(d, 'shortcut', { quiet: true })
+    }
   } else if (state === 'escape') {
     if (d) cancel(d, 'escape')
   }
@@ -574,6 +626,12 @@ function start(source, mode) {
     peak: 0,
     lastText: '',
     lastStable: 0,
+    preroll: [],
+    prerollLen: 0,
+    audioMs: 0,
+    lastVoiceMs: -Infinity,
+    voicedSinceCommit: false,
+    sentMs: 0,
   }
   stream.owner = d
   current = d
@@ -610,17 +668,50 @@ function onAudio(d, pcm) {
   } else {
     d.silenceRun += ms
   }
-  d.segmentMs += ms
-  d.uncommittedMs += ms
+  // Silence costs nothing: OpenAI bills the audio it receives, so audio goes
+  // out only from just before speech until a moment after it. The rest waits
+  // in a short lead-in buffer in case speech starts.
+  const isVoice = rms > Math.max(220, d.floor * 2)
+  d.audioMs += ms
+  if (isVoice) {
+    d.lastVoiceMs = d.audioMs
+    d.voicedSinceCommit = true
+  }
+  if (d.audioMs - d.lastVoiceMs <= HANGOVER_MS) {
+    if (d.prerollLen) {
+      d.pendingBytes.push(...d.preroll)
+      d.pendingLen += d.prerollLen
+      d.segmentMs += d.prerollLen / BYTES_PER_MS
+      d.uncommittedMs += d.prerollLen / BYTES_PER_MS
+      d.preroll = []
+      d.prerollLen = 0
+    }
+    d.pendingBytes.push(pcm)
+    d.pendingLen += pcm.length
+    d.segmentMs += ms
+    d.uncommittedMs += ms
+    if (d.pendingLen >= 60 * BYTES_PER_MS) flushAudio(d)
+  } else {
+    d.preroll.push(pcm)
+    d.prerollLen += pcm.length
+    while (d.prerollLen > PREROLL_MS * BYTES_PER_MS && d.preroll.length > 1) d.prerollLen -= d.preroll.shift().length
+  }
 
-  d.pendingBytes.push(pcm)
-  d.pendingLen += pcm.length
-  if (d.pendingLen >= 60 * BYTES_PER_MS) flushAudio(d)
+  // Hands-free with nobody talking: stop rather than hold the mic open.
+  if (d.phase === 'listening' && d.mode === 'locked' && config.autoStopSeconds > 0) {
+    if (d.audioMs - Math.max(d.lastVoiceMs, 0) >= config.autoStopSeconds * 1000) {
+      logRoute(`auto-stop after ${config.autoStopSeconds} s without speech`)
+      finish(d, 'silence')
+      return
+    }
+  }
 
   // gpt-live-transcribe takes no server VAD, so turns end here: at a natural
   // pause, or at a ceiling, so long dictations finalize as they go.
   if (d.phase === 'listening' && d.speechInSegment >= 300 && (d.silenceRun >= 800 || d.segmentMs >= 25000)) {
     commit(d)
+    // Stop sending at the pause until speech resumes (the lead-in catches it).
+    if (!isVoice) d.lastVoiceMs = d.audioMs - HANGOVER_MS - 1
   }
 
   const t = now()
@@ -633,6 +724,7 @@ function onAudio(d, pcm) {
 function flushAudio(d) {
   if (d.pendingLen === 0) return
   const audio = Buffer.concat(d.pendingBytes, d.pendingLen).toString('base64')
+  d.sentMs += d.pendingLen / BYTES_PER_MS
   d.pendingBytes = []
   d.pendingLen = 0
   streamSend(d, { type: 'input_audio_buffer.append', audio })
@@ -645,19 +737,21 @@ function commit(d) {
   d.speechInSegment = 0
   d.segmentMs = 0
   d.uncommittedMs = 0
+  d.voicedSinceCommit = false
 }
 
 async function finish(d, reason) {
   if (d.phase !== 'listening') return
   d.phase = 'finishing'
   d.finishReason = reason
+  logRoute(`finish ${reason}`)
   clearTimeout(d.maxTimer)
   if (current === d) current = null
   lockedTapPending = false
   publishState(d)
   await closeCapture(d.capture)
   if (d.phase !== 'finishing') return
-  if (d.hasSignal && d.uncommittedMs >= 100) {
+  if (d.voicedSinceCommit && d.uncommittedMs >= 100) {
     // A quarter second of silence lets the model close the last word, as Codex does.
     d.pendingBytes.push(Buffer.alloc(250 * BYTES_PER_MS))
     d.pendingLen += 250 * BYTES_PER_MS
@@ -675,7 +769,8 @@ function cancel(d, reason, { quiet = false } = {}) {
   if (current === d) current = null
   if (!d.capture.stopped) closeCapture(d.capture)
   closeStream(d.stream)
-  emit({ type: 'canceled', id: d.id, reason, quiet })
+  logRoute(`cancel ${reason}`)
+  emit({ type: 'canceled', id: d.id, reason, quiet, sentMs: Math.round(d.sentMs) })
   publishState(d)
 }
 
@@ -760,9 +855,11 @@ function settle(d) {
     type: 'final',
     id: d.id,
     text,
-    isSilent: !d.hasSignal,
+    isSilent: d.sentMs === 0 && !text,
     reason: d.finishReason,
     ms: Math.round(now() - d.startedAt),
+    sentMs: Math.round(d.sentMs),
+    autoStopMs: config.autoStopSeconds * 1000,
   })
   publishState(d)
 }
@@ -787,23 +884,24 @@ const server = http.createServer((req, res) => {
     res.writeHead(403).end()
     return
   }
-  const cmd = new URL(req.url, 'http://x').searchParams.get('c')
+  const url = new URL(req.url, 'http://x')
+  const cmd = url.searchParams.get('c')
   const reply = body => {
     res.writeHead(200, { 'content-type': 'application/json' })
     res.end(JSON.stringify(body))
   }
   switch (cmd) {
     case 'toggle':
-      claimOwner()
+      claimOwner('dictate')
       if (current) finish(current, 'command')
       else start('command', 'locked')
       return reply({ ok: true })
     case 'start':
-      claimOwner()
+      claimOwner('dictate')
       start('command', 'locked')
       return reply({ ok: true })
     case 'activate':
-      claimOwner()
+      claimOwner(url.searchParams.get('why') ?? 'activate')
       return reply({ ok: true, isOwner: true })
     case 'stop':
       if (current) finish(current, 'command')
@@ -853,6 +951,7 @@ const server = http.createServer((req, res) => {
 function shutdown() {
   if (shuttingDown) return
   shuttingDown = true
+  logRoute('helper stop')
   if (isOwner()) {
     try {
       unlinkSync(OWNER_FILE)
@@ -888,6 +987,7 @@ try {
 startNative(hotkey.vk)
 claimIfUnowned()
 server.listen(0, '127.0.0.1', () => {
+  logRoute(`helper start, session process ${process.ppid}`)
   emit({
     type: 'ready',
     port: server.address().port,

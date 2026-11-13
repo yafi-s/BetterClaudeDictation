@@ -70,9 +70,9 @@ Put the key in yourself, through **Set up dictation**. It never needs to pass th
 | **Enter** right after you stop | Waits for your last words, then sends |
 | Right Ctrl + another key | Treated as a shortcut, so no dictation starts |
 | `/dictate` | Start or finish without the key |
-| `/dictate status`, `devices`, `key`, `reconnect`, `cancel` | Diagnostics, microphones, the key, reconnecting |
+| `/dictate status`, `devices`, `key`, `reconnect`, `cancel` | Diagnostics (including how much audio this session has sent), microphones, the key, reconnecting |
 
-Right Ctrl works even when Claude isn't the focused window. With several Claude sessions open, the key follows the session you last typed in or clicked **Dictate** in.
+Right Ctrl works even when Claude isn't the focused window. With several Claude sessions open, Right Ctrl goes to the session on screen: switching to a session hands it the key, and so do typing in it, sending from it, or clicking its **Dictate** button. The bar shows up with the session itself, before the helper behind it has finished starting.
 
 ## Options
 
@@ -83,6 +83,7 @@ Set these in the plugin's settings:
 - **Languages:** for example `en`, or `en, fr`
 - **Vocabulary hints:** names and terms to expect
 - **Latency:** `minimal`, `low`, `medium` or `high`
+- **Hands-free auto-stop:** hands-free dictation stops by itself after this many seconds without speech (default 20; 0 turns it off)
 - **Show words while you speak:** off by default, so the text appears when you finish; on, the words stream in dimmed and settle as they're finalized
 - **Show the idle bar**
 
@@ -92,6 +93,7 @@ Set these in the plugin's settings:
 - `helper/dictation-helper.mjs` (Node):
   - It keeps a configured OpenAI stream open ahead of time, so a press never waits for a connection.
   - It streams 24 kHz mono PCM16 in about 60 ms chunks. Audio captured before the stream is ready is queued, not dropped.
+  - It sends audio only around speech: from half a second before you start talking until about a second after you stop. Silence stays on your machine, so it isn't billed.
   - It ends a turn at each 800 ms pause, or every 25 seconds at most, so long dictation is finalized as you go.
   - On release it adds 250 ms of silence so the last word isn't clipped.
   - Each dictation gets its own stream, so back-to-back presses never mix.
@@ -101,7 +103,8 @@ The streaming design takes its cues from studying how Codex's desktop app does d
 
 ## Privacy and cost
 
-- Audio leaves your machine only while you're dictating, and only to OpenAI.
+- Audio leaves your machine only while you're dictating, only while you're speaking, and only to OpenAI. OpenAI bills the audio it receives, so a mic left open in silence costs nothing, and hands-free dictation stops by itself after 20 seconds without speech.
+- `/dictate status` shows how much audio this session has sent and roughly what it cost.
 - The mic is open only while you dictate, plus one ~10 ms open at session start to warm the driver.
 - Your key is read only by the helper process. It never reaches Claude, the model, or the chat.
 - Anything in the key file that doesn't look like a key is never sent anywhere.
@@ -114,7 +117,7 @@ node bench/mic-open.mjs                  # mic open time, the mod's capture vs f
 node bench/run-bench.mjs                 # latency and accuracy; writes bench/RESULTS.md
 ```
 
-A run costs about $0.05.
+A run costs about $0.05. To drive the real helper with a recording instead of your microphone, set `LIVE_DICTATION_FAKE_MIC` to a 24 kHz mono WAV.
 
 ## Limits
 
